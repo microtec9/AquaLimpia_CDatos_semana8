@@ -1,10 +1,12 @@
-# SEMANA 8 - TAREA - PREGUNTA 1.2
-# OSCAR ORTEGA MORALES - AQUALIMPIA S.A.
+# SEMANA 8 - TAREA - PREGUNTA 1.1
+# SCRIPT PRINCIPAL - OSCAR ORTEGA MORALES
+# AQUALIMPIA S.A.
 
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
-from scipy import stats
+
+# Importar funciones desde archivo externo (modular)
+from funciones import calcular_eficiencia, calcular_promedios_por_planta, correlacion_variables, analisis_calidad_datos
 
 # ============================================
 # 1. CARGA DE DATOS
@@ -19,23 +21,18 @@ print("DASHBOARD EXPLORATORIO - AQUALIMPIA S.A.")
 print("="*60)
 
 # ============================================
-# 2. ANÁLISIS DE CALIDAD DE DATOS
+# 2. ANÁLISIS DE CALIDAD DE DATOS (función importada)
 # ============================================
 
 print("\n1. ANALISIS DE CALIDAD DE DATOS")
 print("-"*40)
-print(f"Total de registros: {len(datos)}")
-print(f"Total de columnas: {len(datos.columns)}")
-print("\nValores nulos por columna:")
-print(datos.isnull().sum())
-print("\nTipos de datos:")
-print(datos.dtypes)
+analisis_calidad_datos(datos)
 
 # ============================================
 # 3. LIMPIEZA DE DATOS
 # ============================================
 
-# Separar columna energía/lodos (están juntas)
+# Separar columna energía/lodos (están juntas en algunos datasets)
 if "energia_aeracion_kWh/lodos_generados_kg_d" in datos.columns:
     datos[["energia_aeracion_kWh", "lodos_generados_kg_d"]] = datos["energia_aeracion_kWh/lodos_generados_kg_d"].str.split("/", expand=True)
     datos["energia_aeracion_kWh"] = pd.to_numeric(datos["energia_aeracion_kWh"])
@@ -48,41 +45,20 @@ print(f"\nFilas eliminadas por nulos: {datos_original - len(datos)}")
 print(f"Filas finales: {len(datos)}")
 
 # ============================================
-# 4. FUNCIONES REUTILIZABLES (MÓDULOS)
+# 4. CÁLCULOS PRINCIPALES (usando funciones)
 # ============================================
 
-def calcular_eficiencia(df):
-    """Calcula eficiencia de tratamiento por cada registro"""
-    return ((df["DBO_entrada_mg_L"] - df["DBO_salida_mg_L"]) / df["DBO_entrada_mg_L"]) * 100
-
-def calcular_promedios_por_planta(df):
-    """Calcula promedios de todas las variables por planta"""
-    eficiencia = df.groupby("planta")["eficiencia"].mean()
-    caudal = df.groupby("planta")["caudal_entrada_m3_d"].mean()
-    energia = df.groupby("planta")["energia_aeracion_kWh"].mean()
-    lodos = df.groupby("planta")["lodos_generados_kg_d"].mean()
-    return eficiencia, caudal, energia, lodos
-
-def correlacion_variables(df):
-    """Calcula correlación entre caudal y eficiencia usando SciPy"""
-    correlacion, p_valor = stats.pearsonr(df["caudal_entrada_m3_d"], df["eficiencia"])
-    return correlacion, p_valor
-
-# ============================================
-# 5. CÁLCULOS PRINCIPALES
-# ============================================
-
-# Calcular eficiencia
+# Calcular eficiencia (función importada)
 datos["eficiencia"] = calcular_eficiencia(datos)
 
-# Calcular promedios por planta
+# Calcular promedios por planta (función importada)
 eficiencia_prom, caudal_prom, energia_prom, lodos_prom = calcular_promedios_por_planta(datos)
 
-# Correlación entre caudal y eficiencia
+# Correlación entre caudal y eficiencia (función importada)
 corr, p_valor = correlacion_variables(datos)
 
 # ============================================
-# 6. RESULTADOS EN CONSOLA
+# 5. RESULTADOS EN CONSOLA
 # ============================================
 
 print("\n2. RESULTADOS POR PLANTA")
@@ -106,7 +82,7 @@ else:
     print("→ No existe correlación significativa")
 
 # ============================================
-# 7. DASHBOARD EXPLORATORIO (4 gráficos en uno)
+# 6. DASHBOARD EXPLORATORIO (4 gráficos en una ventana)
 # ============================================
 
 print("\n4. GENERANDO DASHBOARD...")
@@ -137,7 +113,7 @@ axes[1,0].set_title("Consumo de Energía en Aeración", fontsize=12)
 axes[1,0].set_ylabel("Energía (kWh)")
 axes[1,0].grid(axis='y', linestyle='--', alpha=0.7)
 for i, v in enumerate(energia_prom.values):
-    axes[1,0].text(i, v + 5, f"{v:.0f}", ha='center', fontsize=9)
+    axes[1,0].text(i, v + 10, f"{v:.0f}", ha='center', fontsize=9)
 
 # Gráfico 4: Lodos
 axes[1,1].bar(lodos_prom.index, lodos_prom.values, color='brown')
@@ -151,7 +127,7 @@ plt.tight_layout()
 plt.show()
 
 # ============================================
-# 8. EXPORTAR REPORTES PARA CADA ÁREA
+# 7. EXPORTAR REPORTES PARA CADA ÁREA
 # ============================================
 
 print("\n5. EXPORTANDO REPORTES...")
@@ -165,7 +141,6 @@ print("✓ Reporte de Operaciones guardado: reporte_operaciones.csv")
 
 # Reporte para Área de Gestión Ambiental
 reporte_ambiental = datos[["fecha_registro", "planta", "DBO_salida_mg_L", "cumplimiento_norma"]]
-# Agregar columna de estado normativo
 reporte_ambiental["estado_normativo"] = reporte_ambiental["cumplimiento_norma"].apply(
     lambda x: "CUMPLE" if x == 1 else "NO CUMPLE"
 )
@@ -173,7 +148,7 @@ reporte_ambiental.to_csv("reporte_ambiental.csv", index=False, encoding='utf-8-s
 print("✓ Reporte de Gestión Ambiental guardado: reporte_ambiental.csv")
 
 # ============================================
-# 9. RESUMEN FINAL
+# 8. RESUMEN FINAL
 # ============================================
 
 print("\n" + "="*60)
