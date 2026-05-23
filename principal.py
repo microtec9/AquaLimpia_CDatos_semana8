@@ -1,30 +1,27 @@
-# archivo principal
-
 import pandas as pd
-import matplotlib.pyplot as plt
+from funciones import eficiencia_numpy, resumen_estadistico, guardar_resultado, cargar_resultado
 
-# importar funciones del otro archivo
-from funciones import *
+# datos de ejemplo
+df = pd.DataFrame({
+    "planta": ["A", "A", "B"],
+    "entrada": [200, 180, 220],
+    "salida": [50, 60, 80]
+})
 
-# abrir excel
-archivo = r"C:\Users\User\Desktop\IACC INGENIERIA\2. CIENCIA DE DATOS\8. SEMANA 8\TAREA SEMANA\CODIGO_TAREA\dataset_set_A_aguas_residuales.xlsx"
+# usar función modular con NumPy
+df["eficiencia"] = eficiencia_numpy(df["entrada"], df["salida"])
 
-datos = pd.read_excel(archivo)
+print(df)
 
-# usar funciones
-datos = limpiar_datos(datos)
+# análisis con SciPy
+media, mediana, moda = resumen_estadistico(df["eficiencia"])
+print("Media:", media)
+print("Mediana:", mediana)
+print("Moda:", moda)
 
-datos = calcular_eficiencia(datos)
+# guardar resultado con Joblib
+guardar_resultado(df, "resultado.pkl")
 
-promedio = promedio_plantas(datos)
-
-print(promedio)
-
-# grafico
-promedio.plot(kind="bar")
-
-plt.title("eficiencia de las plantas")
-plt.ylabel("porcentaje")
-plt.xlabel("plantas")
-
-plt.show()
+# cargar resultado
+df_cargado = cargar_resultado("resultado.pkl")
+print(df_cargado)

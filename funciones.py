@@ -1,25 +1,27 @@
-# archivo: funciones.py / PREGUNTA 4
+import numpy as np
+from scipy import stats
+from joblib import dump, load
 
-import pandas as pd
+# función con NumPy: cálculo de eficiencia promedio
+def eficiencia_numpy(entrada, salida):
+    entrada = np.array(entrada)
+    salida = np.array(salida)
 
-# funcion para limpiar datos
-def limpiar_datos(df):
-    df = df.dropna()
-    return df
+    ef = (entrada - salida) / entrada * 100
+    return ef
 
-# funcion para calcular eficiencia
-def calcular_eficiencia(df):
+# función con SciPy: estadística básica
+def resumen_estadistico(data):
+    media = np.mean(data)
+    mediana = np.median(data)
+    moda = stats.mode(data, keepdims=True).mode[0]
 
-    df["ef"] = (
-        (df["DBO_entrada_mg_L"] - df["DBO_salida_mg_L"])
-        / df["DBO_entrada_mg_L"]
-    ) * 100
+    return media, mediana, moda
 
-    return df
+# guardar resultados con Joblib
+def guardar_resultado(obj, nombre_archivo):
+    dump(obj, nombre_archivo)
 
-# funcion para sacar promedio por planta
-def promedio_plantas(df):
-
-    prom = df.groupby("planta")["ef"].mean()
-
-    return prom
+# cargar resultados con Joblib
+def cargar_resultado(nombre_archivo):
+    return load(nombre_archivo)
